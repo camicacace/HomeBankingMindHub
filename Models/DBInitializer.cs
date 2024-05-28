@@ -17,6 +17,21 @@
                 context.Clients.AddRange(clients);
                 context.SaveChanges();
             }
+
+            if (!context.Accounts.Any())
+            {
+                var clientAlejandro = context.Clients.FirstOrDefault(c => c.Email == "alegomez@gmail.com");
+
+                if (clientAlejandro != null)
+                {
+                    var accounts = new Account[]
+                    {
+                        new Account {ClientId = clientAlejandro.Id, CreationDate = DateTime.Now, Number = "VIN001", Balance = 1000 }
+                    };
+                    context.AddRange(accounts);
+                    context.SaveChanges();
+                }
+            }
         }
     }
 }
