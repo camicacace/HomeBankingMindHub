@@ -1,7 +1,11 @@
-﻿namespace HomeBankingMindHub.Models
+﻿using System;
+
+namespace HomeBankingMindHub.Models
 {
     public class DBInitializer
     {
+        private static int LastGeneratedNumber = 0;
+
         public static void Initialize(HomeBankingContext context) {
 
             if (!context.Clients.Any())
@@ -26,12 +30,20 @@
                 {
                     var accounts = new Account[]
                     {
-                        new Account {ClientId = clientAlejandro.Id, CreationDate = DateTime.Now, Number = "VIN001", Balance = 1000 }
+                        new Account {ClientId = clientAlejandro.Id, CreationDate = DateTime.Now, Number = GenerateNextNumber(), Balance = 1000 },
+                        new Account {ClientId = clientAlejandro.Id, CreationDate = DateTime.Now, Number = GenerateNextNumber(), Balance = 500 }
                     };
                     context.AddRange(accounts);
                     context.SaveChanges();
                 }
             }
+        }
+
+        //Metodo para que se autoincrementen los numeros de cuenta
+        private static string GenerateNextNumber()
+        {
+            LastGeneratedNumber++;
+            return "VIN" + LastGeneratedNumber.ToString("D3");
         }
     }
 }
