@@ -7,22 +7,25 @@ namespace HomeBankingMindHub.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class ClientController : ControllerBase
+    public class ClientsController : ControllerBase
     {
         private readonly IClientRepository _clientRepository;
 
-        public ClientController(IClientRepository clientRepository){
+        public ClientsController(IClientRepository clientRepository)
+        {
             this._clientRepository = clientRepository;
         }
 
         [HttpGet]
         public IActionResult GetClients() {
-            try {
+            try 
+            {
                 var clients = _clientRepository.GetAllClients();
                 var clientsDTO = clients.Select(c => new ClientDTO(c)).ToList();
                 return Ok(clientsDTO);
             }
-            catch (Exception e) {
+            catch (Exception e) 
+            {
                 return BadRequest(e.Message);
             };
         }
@@ -34,14 +37,16 @@ namespace HomeBankingMindHub.Controllers
                 var client = _clientRepository.FindById(id);
 
                 //Por si pongo un id que no existe
-                if (client == null) {
+                if (client == null) 
+                {
                     return NotFound($"Client with ID {id} not found.");
                 }
 
                 var clientDTO = new ClientDTO(client);
                 return Ok(clientDTO);
                 }
-            catch (Exception e){
+            catch (Exception e)
+            {
                 return BadRequest(e.Message);
             }   
         }

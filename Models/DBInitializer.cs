@@ -1,4 +1,5 @@
-﻿using System;
+﻿using HomeBankingMindHub.Models.Enums;
+using System;
 
 namespace HomeBankingMindHub.Models
 {
@@ -34,6 +35,23 @@ namespace HomeBankingMindHub.Models
                         new Account {ClientId = clientAlejandro.Id, CreationDate = DateTime.Now, Number = GenerateNextNumber(), Balance = 500 }
                     };
                     context.AddRange(accounts);
+                    context.SaveChanges();
+                }
+            }
+
+            if (!context.Transactions.Any())
+            {
+                var client1Account = context.Accounts.FirstOrDefault(c => c.Number == "VIN001");
+
+                if (client1Account != null)
+                {
+                    var transactions = new Transaction[]
+                    {
+                        new Transaction {AccountId = client1Account.Id, Type = TransactionType.CREDIT.ToString(), Amount = 5000, Description = "Transferencia reccibida", Date = DateTime.Now.AddHours(-5)},
+                        new Transaction {AccountId = client1Account.Id, Type = TransactionType.DEBIT.ToString(), Amount = -2000, Description = "Compra en tienda mercado libre", Date = DateTime.Now.AddHours(-6)},
+                        new Transaction {AccountId = client1Account.Id, Type = TransactionType.CREDIT.ToString(), Amount = -2500, Description = "Compra en tienda xxxx", Date = DateTime.Now.AddHours(-7)}
+                    };
+                    context.AddRange(transactions); 
                     context.SaveChanges();
                 }
             }
