@@ -5,7 +5,7 @@ using System.Linq.Expressions;
 
 namespace HomeBankingMindHub.Repositories
 {
-    public class RepositoryBase<T> : IRepositoryBase<T> where T : class
+    public abstract class RepositoryBase<T> : IRepositoryBase<T> where T : class
     {
         protected HomeBankingContext RepositoryContext { get; set; }
 
