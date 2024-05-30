@@ -47,7 +47,7 @@ namespace HomeBankingMindHub.Models
                 {
                     var transactions = new Transaction[]
                     {
-                        new Transaction {AccountId = client1Account.Id, Type = TransactionType.CREDIT.ToString(), Amount = 5000, Description = "Transferencia reccibida", Date = DateTime.Now.AddHours(-5)},
+                        new Transaction {AccountId = client1Account.Id, Type = TransactionType.CREDIT.ToString(), Amount = 5000, Description = "Transferencia recibida", Date = DateTime.Now.AddHours(-5)},
                         new Transaction {AccountId = client1Account.Id, Type = TransactionType.DEBIT.ToString(), Amount = -2000, Description = "Compra en tienda mercado libre", Date = DateTime.Now.AddHours(-6)},
                         new Transaction {AccountId = client1Account.Id, Type = TransactionType.DEBIT.ToString(), Amount = -2500, Description = "Compra en tienda xxxx", Date = DateTime.Now.AddHours(-7)}
                     };
