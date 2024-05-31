@@ -11,6 +11,7 @@ namespace HomeBankingMindHub.Repositories.Implementations
         {
             return FindByCondition(client => client.Id == id)
                 .Include(client => client.Accounts)
+                .Include(client => client.Cards)
                 .Include(client => client.ClientLoans)
                 .ThenInclude(cl => cl.Loan)
                 .FirstOrDefault();
@@ -20,6 +21,7 @@ namespace HomeBankingMindHub.Repositories.Implementations
         {
             return FindAll()
                 .Include(client => client.Accounts)
+                .Include(client => client.Cards)
                 .Include(client => client.ClientLoans)
                 .ThenInclude(cl => cl.Loan)
                 .ToList();

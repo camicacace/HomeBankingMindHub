@@ -11,5 +11,6 @@ namespace HomeBankingMindHub.Models
         public DbSet<Transaction> Transactions { get; set; }
         public DbSet<Loan> Loans { get; set; }
         public DbSet<ClientLoan> ClientLoans { get; set; }
+        public DbSet<Card> Cards { get; set; }
     }
 }
