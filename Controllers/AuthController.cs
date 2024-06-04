@@ -1,4 +1,5 @@
-﻿using HomeBankingMindHub.Models;
+﻿using HomeBankingMindHub.DTOs;
+using HomeBankingMindHub.Models;
 using HomeBankingMindHub.Repositories;
 using HomeBankingMindHub.Repositories.Implementations;
 using Microsoft.AspNetCore.Authentication;
@@ -22,14 +23,14 @@ namespace HomeBankingMindHub.Controllers
 
         [HttpPost("login")]
 
-        public async Task<IActionResult> Login([FromBody] Client client)
+        public async Task<IActionResult> Login([FromBody] LoginDTO loginDTO)
         {
             try
             {
-                Client user = _clientRepository.FindByEmail(client.Email);
-                if (user == null || !String.Equals(user.Password,client.Password))
+                Client user = _clientRepository.FindByEmail(loginDTO.Email);
+                if (user == null || !String.Equals(user.Password,loginDTO.Password))
                 {
-                    return Unauthorized();
+                    return StatusCode(403, "Invalid user information");
                 }
 
                 var claims = new List<Claim>

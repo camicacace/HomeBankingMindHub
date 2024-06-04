@@ -1,8 +1,10 @@
 ﻿using HomeBankingMindHub.DTOs;
 using HomeBankingMindHub.Models;
 using HomeBankingMindHub.Repositories;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
 
 namespace HomeBankingMindHub.Controllers
 {
@@ -53,22 +55,24 @@ namespace HomeBankingMindHub.Controllers
         }
 
         [HttpGet("current")]
+        [Authorize(Policy = "ClientOnly")]
 
         public IActionResult getCurrent()
         {
             try
             {
+                // Estamos buscando en la cookie un elemento que tenga ese claim
                 string email = User.FindFirst("Client") != null ? User.FindFirst("Client").Value : string.Empty;
-                if (email == string.Empty)
+                if (email.IsNullOrEmpty())
                 {
-                    return Forbid();
+                    return StatusCode(403,"User not found");
                 }
 
                 Client client = _clientRepository.FindByEmail(email);
 
                 if (client == null)
                 {
-                    return Forbid();
+                    return StatusCode(403,"User not found");
                 }
 
                 var clientDTO = new ClientDTO(client);
@@ -83,17 +87,17 @@ namespace HomeBankingMindHub.Controllers
 
         [HttpPost]
 
-        public IActionResult Post([FromBody] Client client)
+        public IActionResult Post([FromBody] NewClientDTO newClientDTO)
         {
             try
             {
-                if (String.IsNullOrEmpty(client.Email) 
-                    || String.IsNullOrEmpty(client.Password) 
-                    || String.IsNullOrEmpty(client.FirstName) 
-                    || String.IsNullOrEmpty(client.LastName))
-                    return StatusCode(403, "datos inválidos");
+                if (String.IsNullOrEmpty(newClientDTO.Email) 
+                    || String.IsNullOrEmpty(newClientDTO.Password) 
+                    || String.IsNullOrEmpty(newClientDTO.FirstName) 
+                    || String.IsNullOrEmpty(newClientDTO.LastName))
+                    return StatusCode(403, "Faltan datos");
 
-                Client user = _clientRepository.FindByEmail(client.Email);
+                Client user = _clientRepository.FindByEmail(newClientDTO.Email);
                 if (user != null)
                 {
                     return StatusCode(403, "Email está en uso");
@@ -102,15 +106,14 @@ namespace HomeBankingMindHub.Controllers
                 {
                     Client newClient = new Client
                     {
-                        Email = client.Email,
-                        Password = client.Password,
-                        FirstName = client.FirstName,
-                        LastName = client.LastName,
+                        Email = newClientDTO.Email,
+                        Password = newClientDTO.Password,
+                        FirstName = newClientDTO.FirstName,
+                        LastName = newClientDTO.LastName,
                     };
 
                     _clientRepository.Save(newClient);
-                    var newClientDTO = new ClientDTO(newClient);
-                    return Created("", newClientDTO);
+                    return Created("", newClient);
                 }
             }
             catch (Exception e)

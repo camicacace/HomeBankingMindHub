@@ -13,6 +13,7 @@
     <None Include="wwwroot\js\account.js" />
     <None Include="wwwroot\js\accounts.js" />
     <None Include="wwwroot\js\cards.js" />
+    <None Include="wwwroot\js\index.js" />
     <None Include="wwwroot\js\site.js" />
     <None Include="wwwroot\lib\bootstrap\dist\css\bootstrap-grid.css.map" />
     <None Include="wwwroot\lib\bootstrap\dist\css\bootstrap-grid.min.css.map" />

@@ -21,6 +21,7 @@ builder.Services.AddScoped<IClientRepository, ClientRepository>();
 builder.Services.AddScoped<IAccountRepository, AccountRepository>();
 builder.Services.AddScoped<ITransactionRepository, TransactionRepository>();
 
+// Add authentication to the container
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
       .AddCookie(options =>
       {
@@ -28,6 +29,7 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
           options.LoginPath = new PathString("/index.html");
       });
 
+// Add authorization to the container
 builder.Services.AddAuthorization(
     options =>
 {
