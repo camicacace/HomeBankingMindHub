@@ -52,5 +52,71 @@ namespace HomeBankingMindHub.Controllers
             }   
         }
 
+        [HttpGet("current")]
+
+        public IActionResult getCurrent()
+        {
+            try
+            {
+                string email = User.FindFirst("Client") != null ? User.FindFirst("Client").Value : string.Empty;
+                if (email == string.Empty)
+                {
+                    return Forbid();
+                }
+
+                Client client = _clientRepository.FindByEmail(email);
+
+                if (client == null)
+                {
+                    return Forbid();
+                }
+
+                var clientDTO = new ClientDTO(client);
+                return Ok(clientDTO);
+
+            }
+            catch (Exception e)
+            {
+                return StatusCode(500, e.Message);
+            }
+        }
+
+        [HttpPost]
+
+        public IActionResult Post([FromBody] Client client)
+        {
+            try
+            {
+                if (String.IsNullOrEmpty(client.Email) 
+                    || String.IsNullOrEmpty(client.Password) 
+                    || String.IsNullOrEmpty(client.FirstName) 
+                    || String.IsNullOrEmpty(client.LastName))
+                    return StatusCode(403, "datos inválidos");
+
+                Client user = _clientRepository.FindByEmail(client.Email);
+                if (user != null)
+                {
+                    return StatusCode(403, "Email está en uso");
+                }
+                else
+                {
+                    Client newClient = new Client
+                    {
+                        Email = client.Email,
+                        Password = client.Password,
+                        FirstName = client.FirstName,
+                        LastName = client.LastName,
+                    };
+
+                    _clientRepository.Save(newClient);
+                    var newClientDTO = new ClientDTO(newClient);
+                    return Created("", newClientDTO);
+                }
+            }
+            catch (Exception e)
+            {
+                return StatusCode(500, e.Message);
+            }
+        }
     }
 }
