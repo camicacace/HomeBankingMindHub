@@ -144,7 +144,7 @@ namespace HomeBankingMindHub.Controllers
                     };
 
                     _accountRepository.Save(newAccount);
-                    return Created("", newClient);
+                    return Created();
                 }
             }
             catch (Exception e)
@@ -191,7 +191,7 @@ namespace HomeBankingMindHub.Controllers
                     };
 
                     _accountRepository.Save(newAccount);
-                    return Created("", newAccount);
+                    return Created();
 
                 }
 
@@ -238,16 +238,8 @@ namespace HomeBankingMindHub.Controllers
                         return StatusCode(403, $"Ya existe una tarjeta tipo {newCardDTO.Type}, color {newCardDTO.Color}");
                     }            
 
-                   string randomNumber = _cardService.UniqueCardNumber();
+                   string cardNumber = _cardService.UniqueCardNumber(newCardDTO.Type);
 
-                    if (newCardDTO.Type == "DEBIT")
-                    {
-                        randomNumber = _cardService.FormatDebitCardNumber(randomNumber);
-                    }
-                    else if (newCardDTO.Type == "CREDIT")
-                    {
-                        randomNumber = _cardService.FormatCreditCardNumber(randomNumber);
-                    }
 
                     Card newCard = new Card
                     {
@@ -257,12 +249,12 @@ namespace HomeBankingMindHub.Controllers
                         Color = newCardDTO.Color,
                         FromDate = DateTime.Now,
                         ThruDate = DateTime.Now.AddYears(5),
-                        Number = randomNumber,
+                        Number = cardNumber,
                         CVV = _cardService.GenerateCVV(),
                     };
 
                     _cardRepository.Save(newCard);
-                    return Created("", newCard);
+                    return Created();
                 }
 
 

@@ -1,4 +1,5 @@
-﻿using HomeBankingMindHub.Repositories;
+﻿using HomeBankingMindHub.DTOs;
+using HomeBankingMindHub.Repositories;
 using System;
 using System.Drawing;
 
@@ -23,7 +24,7 @@ namespace HomeBankingMindHub.Servicies.Implementations
             return string.Join("-", number.Substring(0, 4), number.Substring(4, 4), number.Substring(8, 3), number.Substring(11, 4));
         }
 
-        public string UniqueCardNumber()
+        public string UniqueCardNumber(string type)
         {
             var allCards = _cardRepository.GetAllCards();
             string randomNumber;
@@ -38,6 +39,15 @@ namespace HomeBankingMindHub.Servicies.Implementations
 
 
             } while (allCards.Any(c => c.Number == randomNumber));
+
+            if (type == "DEBIT")
+            {
+                randomNumber = FormatDebitCardNumber(randomNumber);
+            }
+            else if (type == "CREDIT")
+            {
+                randomNumber = FormatCreditCardNumber(randomNumber);
+            }
 
             return randomNumber;
         }
