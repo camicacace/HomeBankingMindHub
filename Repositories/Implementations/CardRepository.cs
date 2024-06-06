@@ -8,7 +8,8 @@ namespace HomeBankingMindHub.Repositories.Implementations
 
         public bool ExistingCard(long idClient, string type, string color)
         {
-            return FindByCondition(c => c.ClientId == idClient && c.Type == type && c.Color == color).Any();
+            return FindByCondition(c => c.ClientId == idClient && c.Type == type && c.Color == color)
+                .Any();
         }
 
         public IEnumerable<Card> GetAllCards()

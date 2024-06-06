@@ -228,7 +228,6 @@ namespace HomeBankingMindHub.Controllers
                 }
                 else
                 {
-                    // Chequear si es de debito o credito
                     if (_cardRepository.GetCardsByType(client.Id,newCardDTO.Type).Count() >= 3)
                     {
                         return StatusCode(403, $"No se permiten más de 3 tarjetas de tipo {newCardDTO.Type}");
