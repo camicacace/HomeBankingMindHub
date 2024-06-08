@@ -103,6 +103,36 @@ namespace HomeBankingMindHub.Controllers
             }
         }
 
+        [HttpGet("current/accounts")]
+        [Authorize(Policy = "ClientOnly")]
+        public IActionResult getCurrentAccounts()
+        {
+            try
+            {
+                string email = User.FindFirst("Client") != null ? User.FindFirst("Client").Value : string.Empty;
+                if (email.IsNullOrEmpty())
+                {
+                    return StatusCode(403, "Usuario no encontrado");
+                }
+
+                Client client = _clientRepository.FindByEmail(email);
+
+                if (client == null)
+                {
+                    return StatusCode(403, "Usuario no encontrado");
+                }
+
+                var accounts = _accountRepository.GetAccountsByClient(client.Id);
+                var accountsDTO = accounts.Select(a => new AccountDTO(a)).ToList();
+                return Ok(accountsDTO);
+
+            }
+            catch (Exception e)
+            {
+                return StatusCode(500, e.Message);
+            }
+        }
+
         [HttpPost]
 
         public IActionResult Post([FromBody] NewClientDTO newClientDTO)
