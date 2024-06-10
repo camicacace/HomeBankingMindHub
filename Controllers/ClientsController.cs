@@ -3,6 +3,7 @@ using HomeBankingMindHub.Models;
 using HomeBankingMindHub.Models.Enums;
 using HomeBankingMindHub.Repositories;
 using HomeBankingMindHub.Repositories.Implementations;
+using HomeBankingMindHub.Services;
 using HomeBankingMindHub.Servicies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -21,17 +22,13 @@ namespace HomeBankingMindHub.Controllers
     [ApiController]
     public class ClientsController : ControllerBase
     {
-        private readonly IClientRepository _clientRepository;
-        private readonly IAccountRepository _accountRepository;
-        private readonly ICardRepository _cardRepository;
+        private readonly IClientService _clientService;
         private readonly IAccountService _accountService;
         private readonly ICardService _cardService;
 
-        public ClientsController(IClientRepository clientRepository, IAccountRepository accountRepository, ICardRepository cardRepository, IAccountService accountService, ICardService cardService)
+        public ClientsController(IClientService clientService, IAccountService accountService, ICardService cardService)
         {
-            _clientRepository = clientRepository;
-            _accountRepository = accountRepository;
-            _cardRepository = cardRepository;
+            _clientService = clientService;
             _accountService = accountService;
             _cardService = cardService;
         }
@@ -41,9 +38,8 @@ namespace HomeBankingMindHub.Controllers
         public IActionResult GetClients() {
             try 
             {
-                var clients = _clientRepository.GetAllClients();
-                var clientsDTO = clients.Select(c => new ClientDTO(c)).ToList();
-                return Ok(clientsDTO);
+                var clients = _clientService.GetAllClients();
+                return Ok(_clientService.CreateClientsDTO(clients));
             }
             catch (Exception e) 
             {
@@ -52,10 +48,11 @@ namespace HomeBankingMindHub.Controllers
         }
 
         [HttpGet("{id}")]
+        [Authorize (Policy = "ClientOnly")]
         public IActionResult GetClientById(long id)
         {
             try {
-                var client = _clientRepository.FindById(id);
+                var client = _clientService.GetById(id);
 
                 //Por si pongo un id que no existe
                 if (client == null) 
@@ -63,8 +60,7 @@ namespace HomeBankingMindHub.Controllers
                     return NotFound($"El cliente con el ID {id} no se encontro.");
                 }
 
-                var clientDTO = new ClientDTO(client);
-                return Ok(clientDTO);
+                return Ok(_clientService.CreateClientDTO(client));
                 }
             catch (Exception e)
             {
@@ -86,15 +82,14 @@ namespace HomeBankingMindHub.Controllers
                     return StatusCode(403,"Usuario no encontrado");
                 }
 
-                Client client = _clientRepository.FindByEmail(email);
+                Client client = _clientService.GetByEmail(email);
 
                 if (client == null)
                 {
                     return StatusCode(403, "Usuario no encontrado");
                 }
 
-                var clientDTO = new ClientDTO(client);
-                return Ok(clientDTO);
+                return Ok(_clientService.CreateClientDTO(client));
 
             }
             catch (Exception e)
@@ -115,16 +110,15 @@ namespace HomeBankingMindHub.Controllers
                     return StatusCode(403, "Usuario no encontrado");
                 }
 
-                Client client = _clientRepository.FindByEmail(email);
+                Client client = _clientService.GetByEmail(email);
 
                 if (client == null)
                 {
                     return StatusCode(403, "Usuario no encontrado");
                 }
 
-                var accounts = _accountRepository.GetAccountsByClient(client.Id);
-                var accountsDTO = accounts.Select(a => new AccountDTO(a)).ToList();
-                return Ok(accountsDTO);
+                var accounts = _accountService.AccountsByClient(client.Id);
+                return Ok(_accountService.CreateAccountsDTO(accounts));
 
             }
             catch (Exception e)
@@ -145,7 +139,7 @@ namespace HomeBankingMindHub.Controllers
                     || String.IsNullOrEmpty(newClientDTO.LastName))
                     return StatusCode(403, "Faltan datos");
 
-                Client user = _clientRepository.FindByEmail(newClientDTO.Email);
+                Client user = _clientService.GetByEmail(newClientDTO.Email);
                 if (user != null)
                 {
                     return StatusCode(403, "Email está en uso");
@@ -160,8 +154,8 @@ namespace HomeBankingMindHub.Controllers
                         LastName = newClientDTO.LastName,
                     };
 
-                    _clientRepository.Save(newClient);
-                    Client createdClient = _clientRepository.FindByEmail(newClient.Email);
+                    _clientService.SaveClient(newClient);
+                    Client createdClient = _clientService.GetByEmail(newClient.Email);
 
 
                     Account newAccount = new Account
@@ -173,7 +167,7 @@ namespace HomeBankingMindHub.Controllers
 
                     };
 
-                    _accountRepository.Save(newAccount);
+                    _accountService.SaveAccount(newAccount);
                     return Created();
                 }
             }
@@ -198,13 +192,13 @@ namespace HomeBankingMindHub.Controllers
                     return StatusCode(403, "Usuario no encontrado");
                 }
 
-                Client client = _clientRepository.FindByEmail(email);
+                Client client = _clientService.GetByEmail(email);
                 if (client == null)
                 {
                     return StatusCode(403, "Usuario no encontrado");
                 }
 
-                var accounts = _accountRepository.GetAccountsByClient(client.Id);
+                var accounts = _accountService.AccountsByClient(client.Id);
                 if (accounts.Count() >= 3)
                 {
                     return StatusCode(403, "No se permiten mas de 3 cuentas por cliente");
@@ -220,7 +214,7 @@ namespace HomeBankingMindHub.Controllers
                         Number = _accountService.UniqueAccountNumber(),
                     };
 
-                    _accountRepository.Save(newAccount);
+                    _accountService.SaveAccount(newAccount);
                     return Created();
 
                 }
@@ -245,20 +239,20 @@ namespace HomeBankingMindHub.Controllers
                     return StatusCode(403, "Usuario no encontrado");
                 }
 
-                Client client = _clientRepository.FindByEmail(email);
+                Client client = _clientService.GetByEmail(email);
                 if (client == null)
                 {
                     return StatusCode(403, "Usuario no encontrado");
                 }
 
-                var clientCards = _cardRepository.GetCardsByClient(client.Id);
+                var clientCards = _cardService.getClientsCards(client.Id);
                 if (clientCards.Count() >= 6 )
                 {
                     return StatusCode(403, "No se permiten mas de 6 tarjetas por cliente");
                 }
                 else
                 {
-                    if (_cardRepository.GetCardsByType(client.Id,newCardDTO.Type).Count() >= 3)
+                    if (_cardService.getCardsByType(client.Id,newCardDTO.Type).Count() >= 3)
                     {
                         return StatusCode(403, $"No se permiten más de 3 tarjetas de tipo {newCardDTO.Type}");
                     }
@@ -283,7 +277,7 @@ namespace HomeBankingMindHub.Controllers
                         CVV = _cardService.GenerateCVV(),
                     };
 
-                    _cardRepository.Save(newCard);
+                    _cardService.SaveCard(newCard);
                     return Created();
                 }
 

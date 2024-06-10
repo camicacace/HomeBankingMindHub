@@ -2,6 +2,8 @@
 using HomeBankingMindHub.Models;
 using HomeBankingMindHub.Repositories;
 using HomeBankingMindHub.Repositories.Implementations;
+using HomeBankingMindHub.Services;
+using HomeBankingMindHub.Services.Implementations;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Http;
@@ -14,11 +16,11 @@ namespace HomeBankingMindHub.Controllers
     [ApiController]
     public class AuthController : ControllerBase
     {
-        private IClientRepository _clientRepository;
+        private IClientService _clientService;
 
-        public AuthController(IClientRepository clientRepository)
+        public AuthController( IClientService clientService)
         {
-            _clientRepository = clientRepository;
+            _clientService = clientService;
         }
 
         [HttpPost("login")]
@@ -27,7 +29,7 @@ namespace HomeBankingMindHub.Controllers
         {
             try
             {
-                Client user = _clientRepository.FindByEmail(loginDTO.Email);
+                Client user = _clientService.GetByEmail(loginDTO.Email);
                 if (user == null || !String.Equals(user.Password,loginDTO.Password))
                 {
                     return StatusCode(403, "Invalid user information");

@@ -1,8 +1,9 @@
 ﻿using HomeBankingMindHub.DTOs;
 using HomeBankingMindHub.Models;
 using HomeBankingMindHub.Models.Enums;
-using HomeBankingMindHub.Repositories;
-using HomeBankingMindHub.Repositories.Implementations;
+using HomeBankingMindHub.Services;
+using HomeBankingMindHub.Services.Implementations;
+using HomeBankingMindHub.Servicies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -17,19 +18,19 @@ namespace HomeBankingMindHub.Controllers
     [ApiController]
     public class LoansController : ControllerBase
     {
-        private readonly IClientRepository _clientRepository;
-        private readonly IAccountRepository _accountRepository;
-        private readonly ITransactionRepository _transactionRepository;
-        private readonly IClientLoanRepository _clientLoanRepository;
-        private readonly ILoanRepository _loanRepository;
+        private readonly IClientService _clientService;
+        private readonly IAccountService _accountService;
+        private readonly ITransactionService _transactionService;
+        private readonly IClientLoanService _clientLoanService;
+        private readonly ILoanService _loanService;
 
-        public LoansController(IClientRepository clientRepository, IAccountRepository accountRepository, ITransactionRepository transactionRepository, IClientLoanRepository clientLoanRepository, ILoanRepository loanRepository)
+        public LoansController(IClientService clientService, IAccountService accountService, ITransactionService transactionService, IClientLoanService clientLoanService, ILoanService loanService)
         {
-            _clientRepository = clientRepository;
-            _accountRepository = accountRepository;
-            _transactionRepository = transactionRepository;
-            _clientLoanRepository = clientLoanRepository;
-            _loanRepository = loanRepository;
+            _clientService = clientService;
+            _accountService = accountService;
+            _transactionService = transactionService;
+            _clientLoanService = clientLoanService;
+            _loanService = loanService;
         }
 
         [HttpGet]
@@ -45,14 +46,14 @@ namespace HomeBankingMindHub.Controllers
                     return StatusCode(403, "Usuario no encontrado");
                 }
 
-                Client client = _clientRepository.FindByEmail(email);
+                Client client = _clientService.GetByEmail(email);
 
                 if (client == null)
                 {
                     return StatusCode(403, "Usuario no encontrado");
                 }
 
-                var loans = _loanRepository.getAll();
+                var loans = _loanService.GetLoans();
                 var loansDTO = loans.Select(l => new LoanDTO(l)).ToList();
                 return Ok(loansDTO);
             }
@@ -75,7 +76,7 @@ namespace HomeBankingMindHub.Controllers
                     return StatusCode(403, "Usuario no encontrado");
                 }
 
-                Client client = _clientRepository.FindByEmail(email);
+                Client client = _clientService.GetByEmail(email);
 
                 if (client == null)
                 {
@@ -89,7 +90,7 @@ namespace HomeBankingMindHub.Controllers
                     return StatusCode(403, "Faltan datos");
                 }
 
-                var loan = _loanRepository.FindById(loanApplicationDTO.LoanId);
+                var loan = _loanService.GetLoanById(loanApplicationDTO.LoanId);
                 if (loan == null)
                 {
                     return StatusCode(403, "Prestamo no encontrado");
@@ -106,7 +107,7 @@ namespace HomeBankingMindHub.Controllers
                     return StatusCode(403, "Numero de pagos invalidos");
                 }
 
-                var clientAccounts = _accountRepository.GetAccountsByClient(client.Id);
+                var clientAccounts = _accountService.AccountsByClient(client.Id);
                 if (!clientAccounts.Any(account => account.Number == loanApplicationDTO.ToAccountNumber))
                 {
                     return StatusCode(403, "Cuenta incorrecta");
@@ -119,9 +120,10 @@ namespace HomeBankingMindHub.Controllers
                     ClientId = client.Id,
                     LoanId = loanApplicationDTO.LoanId,
                 };
-                _clientLoanRepository.Save(clientLoan);
+                _clientLoanService.SaveClientLoan(clientLoan);
 
-                var account = _accountRepository.FindByNumber(loanApplicationDTO.ToAccountNumber);
+                var account = _accountService.GetAccountByNumber(loanApplicationDTO.ToAccountNumber);
+
                 Transaction transaction = new Transaction
                 {
                     AccountId = account.Id,
@@ -130,10 +132,10 @@ namespace HomeBankingMindHub.Controllers
                     Description = loan.Name + " - Loan approved",
                     Date = DateTime.Now,
                 };
-                _transactionRepository.Save(transaction);
+                _transactionService.SaveTransaction(transaction);
 
                 account.Balance += loanApplicationDTO.Amount + 0.2 * loanApplicationDTO.Amount;
-                _accountRepository.Save(account);
+                _accountService.SaveAccount(account);
                 return Created();
             }
             catch (Exception e)

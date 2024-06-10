@@ -1,6 +1,8 @@
 using HomeBankingMindHub.Models;
 using HomeBankingMindHub.Repositories;
 using HomeBankingMindHub.Repositories.Implementations;
+using HomeBankingMindHub.Services;
+using HomeBankingMindHub.Services.Implementations;
 using HomeBankingMindHub.Servicies;
 using HomeBankingMindHub.Servicies.Implementations;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -20,8 +22,12 @@ builder.Services.AddDbContext<HomeBankingContext>(
     options => options.UseSqlServer(builder.Configuration.GetConnectionString("HomeBankingConnection")));
 
 // Servicies
+builder.Services.AddScoped<IClientService, ClientService>();
 builder.Services.AddScoped<IAccountService,AccountService>();
 builder.Services.AddScoped<ICardService, CardService>();
+builder.Services.AddScoped<ITransactionService, TransactionService>();
+builder.Services.AddScoped<ILoanService, LoanService>();
+builder.Services.AddScoped<IClientLoanService, ClientLoanService>();
 
 // Repositories
 builder.Services.AddScoped<IClientRepository, ClientRepository>();

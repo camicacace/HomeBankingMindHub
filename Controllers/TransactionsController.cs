@@ -2,6 +2,8 @@
 using HomeBankingMindHub.Models;
 using HomeBankingMindHub.Models.Enums;
 using HomeBankingMindHub.Repositories;
+using HomeBankingMindHub.Services;
+using HomeBankingMindHub.Servicies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -14,25 +16,25 @@ namespace HomeBankingMindHub.Controllers
     [ApiController]
     public class TransactionsController : ControllerBase
     {
-        private readonly ITransactionRepository _transactionRepository;
-        private readonly IAccountRepository _accountRepository;
-        private readonly IClientRepository _clientRepository;
-        public TransactionsController(ITransactionRepository transactionRepository, IAccountRepository accountRepository, IClientRepository clientRepository)
+        private readonly ITransactionService _transactionService;
+        private readonly IAccountService _accountService;
+        private readonly IClientService _clientService;
+        public TransactionsController(ITransactionService transactionService, IAccountService accountService, IClientService clientService)
         {
-            _transactionRepository = transactionRepository;
-            _accountRepository = accountRepository;
-            _clientRepository = clientRepository;
+            _transactionService = transactionService;
+            _accountService = accountService;
+            _clientService = clientService;
         }
 
         [HttpGet]
+        [Authorize (Policy = "AdminOnly")]
 
         public IActionResult GetTransactions()
         {
             try
             {
-                var transactions = _transactionRepository.GetAllTransactions();
-                var transactionsDTO = transactions.Select(t => new TransactionDTO(t)).ToList();
-                return Ok(transactionsDTO);
+                var transactions = _transactionService.GetTransactions();
+                return Ok(_transactionService.CreateTransactionsDTO(transactions));
             }
             catch (Exception e)
             {
@@ -41,10 +43,11 @@ namespace HomeBankingMindHub.Controllers
         }
 
         [HttpGet("{id}")]
+        [Authorize(Policy = "AdminOnly")]
 
         public IActionResult GetById(int id)
         {
-            var transaction = _transactionRepository.FindById(id);
+            var transaction = _transactionService.GetById(id);
 
             if (transaction == null)
             {
@@ -53,8 +56,7 @@ namespace HomeBankingMindHub.Controllers
 
             try
             {
-                var transactionDTO = new TransactionDTO(transaction);
-                return Ok(transactionDTO);
+                return Ok(_transactionService.CreateDTO(transaction));
             }
             catch (Exception e)
             {
@@ -75,7 +77,7 @@ namespace HomeBankingMindHub.Controllers
                     return StatusCode(403, "Usuario no encontrado");
                 }
 
-                Client client = _clientRepository.FindByEmail(email);
+                Client client = _clientService.GetByEmail(email);
                 if (client == null)
                 {
                     return StatusCode(403, "Usuario no encontrado");
@@ -99,13 +101,13 @@ namespace HomeBankingMindHub.Controllers
                     return StatusCode(403, "Cuenta origen y destino iguales");
                 }
 
-                var originAccount = _accountRepository.FindByNumber(newTransferDTO.FromAccountNumber);
+                var originAccount = _accountService.GetAccountByNumber(newTransferDTO.FromAccountNumber);
                 if (originAccount.Balance < newTransferDTO.Amount)
                 {
                     return StatusCode(403, "No hay suficiente saldo para hacer la transferencia");
                 }
 
-                var destinAccount = _accountRepository.FindByNumber(newTransferDTO.ToAccountNumber);
+                var destinAccount = _accountService.GetAccountByNumber(newTransferDTO.ToAccountNumber);
                 if (destinAccount == null)
                 {
                     return StatusCode(403, "La cuenta destino no existe");
@@ -132,10 +134,10 @@ namespace HomeBankingMindHub.Controllers
                 originAccount.Balance = originAccount.Balance - newTransferDTO.Amount;
                 destinAccount.Balance = destinAccount.Balance + newTransferDTO.Amount;
 
-                _transactionRepository.Save(originTransaction);
-                _transactionRepository.Save(destinTransaction);
-                _accountRepository.Save(originAccount);
-                _accountRepository.Save(destinAccount);
+                _transactionService.SaveTransaction(originTransaction);
+                _transactionService.SaveTransaction(destinTransaction);
+                _accountService.SaveAccount(originAccount);
+                _accountService.SaveAccount(destinAccount);
                 return Created();
 
             }

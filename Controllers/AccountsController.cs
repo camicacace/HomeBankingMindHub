@@ -1,5 +1,5 @@
-﻿using HomeBankingMindHub.DTOs;
-using HomeBankingMindHub.Repositories;
+﻿using HomeBankingMindHub.Servicies;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -10,21 +10,21 @@ namespace HomeBankingMindHub.Controllers
     [ApiController]
     public class AccountsController : ControllerBase
     {
-        private readonly IAccountRepository _accountRepository;
+        private readonly IAccountService _accountService;
 
-        public AccountsController(IAccountRepository accountRepository)
+        public AccountsController(IAccountService accountService)
         {
-            _accountRepository = accountRepository;
+            _accountService = accountService;
         }
 
         [HttpGet]
+        [Authorize(Policy = "ClientOnly")]
         public IActionResult GetAccounts()
         {
             try
             {
-                var accounts = _accountRepository.GetAllAccounts();
-                var accountsDTO = accounts.Select(a => new AccountDTO(a)).ToList();
-                return Ok(accountsDTO);
+                var accounts = _accountService.GetAccounts();
+                return Ok(_accountService.CreateAccountsDTO(accounts));
             }
             catch (Exception e)
             {
@@ -33,19 +33,19 @@ namespace HomeBankingMindHub.Controllers
         }
 
         [HttpGet("{id}")]
+        [Authorize (Policy = "ClientOnly")]
         public IActionResult GetAccountById(long id)
         {
             try
             {
-                var account = _accountRepository.FindById(id);
+                var account = _accountService.AccountById(id);
 
-                if (account == null)
+                if (_accountService.AccountById(id) == null)
                 {
                     return NotFound($"Account with ID {id} not found.");
                 }
 
-                var accountDTO = new AccountDTO(account);
-                return Ok(accountDTO);
+                return Ok(_accountService.CreateAccountDTO(account));
             }
             catch (Exception e)
             {

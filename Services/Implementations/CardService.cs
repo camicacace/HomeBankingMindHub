@@ -1,4 +1,5 @@
 ﻿using HomeBankingMindHub.DTOs;
+using HomeBankingMindHub.Models;
 using HomeBankingMindHub.Repositories;
 using System;
 using System.Drawing;
@@ -61,6 +62,21 @@ namespace HomeBankingMindHub.Servicies.Implementations
         {
             return _cardRepository.ExistingCard(idClient,type,color);
 
+        }
+
+        public IEnumerable<Card> getClientsCards(long idClient)
+        {
+            return _cardRepository.GetCardsByClient(idClient);
+        }
+
+        public IEnumerable<Card> getCardsByType(long idClient, string type)
+        {
+            return _cardRepository.GetCardsByType(idClient,type);
+        }
+
+        public void SaveCard(Card card)
+        {
+            _cardRepository.Save(card);
         }
     }
 }
