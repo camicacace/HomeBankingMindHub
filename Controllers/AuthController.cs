@@ -78,20 +78,5 @@ namespace HomeBankingMindHub.Controllers
                 return StatusCode(500, e.Message);
             }
         }
-
-        [HttpPost("logout")]
-
-        public async Task<IActionResult> Logout()
-        {
-            try
-            {  
-                // Hago logout pero el token expira pasando el tiempo que definimos
-                return Ok();
-            }
-            catch (Exception e)
-            {
-                return StatusCode(500, e.Message);
-            }
-        }
     }
 }
