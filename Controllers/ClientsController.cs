@@ -54,7 +54,6 @@ namespace HomeBankingMindHub.Controllers
         }
 
         [HttpGet("{id}")]
-        [Authorize (Policy = "ClientOnly")]
         public IActionResult GetClientById(long id)
         {
             try {
@@ -74,13 +73,11 @@ namespace HomeBankingMindHub.Controllers
 
 
         [HttpGet("current")]
-        [Authorize(Policy = "ClientOnly")]
-
         public IActionResult getCurrent()
         {
             try
             {
-                // Estamos buscando en la cookie un elemento que tenga ese claim
+                // Estamos buscando la claim actual
                 string email = User.FindFirst("Client") != null ? User.FindFirst("Client").Value : string.Empty;
 
                 Response<ClientDTO> response = _clientService.GetByEmail(email);
@@ -96,6 +93,7 @@ namespace HomeBankingMindHub.Controllers
                 return StatusCode(500, e.Message);
             }
         }
+
 
         [HttpGet("current/accounts")]
         [Authorize(Policy = "ClientOnly")]

@@ -9,7 +9,10 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Text;
 
 namespace HomeBankingMindHub.Controllers
 {
@@ -19,11 +22,13 @@ namespace HomeBankingMindHub.Controllers
     {
         private readonly IClientRepository _clientRepository;
         private readonly PasswordHasher<Client> _passwordHasher;
+        private readonly IConfiguration _configuration;
 
-        public AuthController( IClientRepository clientRepository)
+        public AuthController( IClientRepository clientRepository, IConfiguration configuration)
         {
             _clientRepository = clientRepository;
             _passwordHasher = new PasswordHasher<Client>();
+            _configuration = configuration;
         }
 
         [HttpPost("login")]
@@ -46,7 +51,7 @@ namespace HomeBankingMindHub.Controllers
                 }
 
                 var claims = new List<Claim>
-                {   
+                {
                     new Claim("Client", user.Email)
                 };
 
@@ -55,17 +60,17 @@ namespace HomeBankingMindHub.Controllers
                     claims.Add(new Claim("Admin", user.Email));
                 }
 
+                var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
+                var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256Signature);
 
-                var claimsIdentity = new ClaimsIdentity(
-                    claims,
-                    CookieAuthenticationDefaults.AuthenticationScheme
-                    );
+                var token = new JwtSecurityToken(
+                    claims: claims,
+                    expires: DateTime.Now.AddMinutes(10),
+                    signingCredentials: creds);
 
-                await HttpContext.SignInAsync(
-                    CookieAuthenticationDefaults.AuthenticationScheme, 
-                    new ClaimsPrincipal(claimsIdentity));
+                string createdToken = new JwtSecurityTokenHandler().WriteToken(token);
 
-                return Ok();
+                return Ok(createdToken);
 
             }
             catch (Exception e)
@@ -79,9 +84,8 @@ namespace HomeBankingMindHub.Controllers
         public async Task<IActionResult> Logout()
         {
             try
-            {
-                await HttpContext.SignOutAsync(
-                CookieAuthenticationDefaults.AuthenticationScheme);
+            {  
+                // Hago logout pero el token expira pasando el tiempo que definimos
                 return Ok();
             }
             catch (Exception e)

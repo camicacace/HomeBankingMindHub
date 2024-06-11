@@ -6,7 +6,10 @@ using HomeBankingMindHub.Services.Implementations;
 using HomeBankingMindHub.Servicies;
 using HomeBankingMindHub.Servicies.Implementations;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -36,20 +39,31 @@ builder.Services.AddScoped<ILoanRepository, LoanRepository>();
 builder.Services.AddScoped<IClientLoanRepository, ClientLoanRepository>();
 
 // Add authentication to the container
-builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-      .AddCookie(options =>
-      {
-          options.ExpireTimeSpan = TimeSpan.FromMinutes(10);
-          options.LoginPath = new PathString("/index.html");
-      });
-
-// Add authorization to the container
-builder.Services.AddAuthorization(
-    options =>
+builder.Services.AddAuthentication(options =>
 {
-    options.AddPolicy("ClientOnly", policy => policy.RequireClaim("Client"));
-    options.AddPolicy("AdminOnly", policy => policy.RequireClaim("Admin"));
+    options.DefaultAuthenticateScheme = "JwtScheme";
+    options.DefaultChallengeScheme = "JwtScheme";
 });
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer("JwtScheme", options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JWT:Key"])),
+            ValidateIssuer = false,
+            ValidateAudience = false
+        };
+    });
+
+    // Add authorization to the container
+    builder.Services.AddAuthorization(
+        options =>
+        {
+            options.AddPolicy("ClientOnly", policy => policy.RequireClaim("Client"));
+            options.AddPolicy("AdminOnly", policy => policy.RequireClaim("Admin"));
+        });
 
 var app = builder.Build();
 
