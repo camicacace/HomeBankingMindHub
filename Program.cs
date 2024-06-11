@@ -24,10 +24,8 @@ builder.Services.AddDbContext<HomeBankingContext>(
 // Servicies
 builder.Services.AddScoped<IClientService, ClientService>();
 builder.Services.AddScoped<IAccountService,AccountService>();
-builder.Services.AddScoped<ICardService, CardService>();
 builder.Services.AddScoped<ITransactionService, TransactionService>();
 builder.Services.AddScoped<ILoanService, LoanService>();
-builder.Services.AddScoped<IClientLoanService, ClientLoanService>();
 
 // Repositories
 builder.Services.AddScoped<IClientRepository, ClientRepository>();

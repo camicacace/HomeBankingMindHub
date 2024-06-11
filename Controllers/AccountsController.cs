@@ -1,4 +1,5 @@
-﻿using HomeBankingMindHub.Servicies;
+﻿using HomeBankingMindHub.DTOs;
+using HomeBankingMindHub.Servicies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -23,8 +24,13 @@ namespace HomeBankingMindHub.Controllers
         {
             try
             {
-                var accounts = _accountService.GetAccounts();
-                return Ok(_accountService.CreateAccountsDTO(accounts));
+                var response = _accountService.GetAccounts();
+
+                if (response.StatusCode != 200)
+                    return StatusCode(response.StatusCode, response.Message);
+                else
+                    return StatusCode(response.StatusCode, response.Data);
+
             }
             catch (Exception e)
             {
@@ -38,14 +44,12 @@ namespace HomeBankingMindHub.Controllers
         {
             try
             {
-                var account = _accountService.AccountById(id);
+                var response = _accountService.AccountById(id);
 
-                if (_accountService.AccountById(id) == null)
-                {
-                    return NotFound($"Account with ID {id} not found.");
-                }
-
-                return Ok(_accountService.CreateAccountDTO(account));
+                if (response.StatusCode != 200)
+                    return StatusCode(response.StatusCode, response.Message);
+                else
+                    return StatusCode(response.StatusCode, response.Data);
             }
             catch (Exception e)
             {

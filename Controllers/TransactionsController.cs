@@ -33,36 +33,40 @@ namespace HomeBankingMindHub.Controllers
         {
             try
             {
-                var transactions = _transactionService.GetTransactions();
-                return Ok(_transactionService.CreateTransactionsDTO(transactions));
+                Response<IEnumerable<TransactionDTO>> response = _transactionService.GetTransactions();
+
+                if (response.StatusCode != 200)
+                    return StatusCode(response.StatusCode, response.Message);
+
+                return StatusCode(response.StatusCode, response.Data);
             }
             catch (Exception e)
             {
                 return BadRequest(e.Message);
             }
         }
+
 
         [HttpGet("{id}")]
         [Authorize(Policy = "AdminOnly")]
 
         public IActionResult GetById(int id)
         {
-            var transaction = _transactionService.GetById(id);
-
-            if (transaction == null)
-            {
-                return NotFound($"Transaction with ID {id} not found.");
-            }
-
             try
             {
-                return Ok(_transactionService.CreateDTO(transaction));
+                Response<TransactionDTO> response = _transactionService.GetById(id);
+                if (response.StatusCode != 200)
+                    return StatusCode(response.StatusCode, response.Message);
+
+                return StatusCode(response.StatusCode, response.Data);
+
             }
             catch (Exception e)
             {
                 return BadRequest(e.Message);
             }
         }
+
 
         [HttpPost]
         [Authorize(Policy = "ClientOnly")]
@@ -72,73 +76,13 @@ namespace HomeBankingMindHub.Controllers
             try
             {
                 string email = User.FindFirst("Client") != null ? User.FindFirst("Client").Value : string.Empty;
-                if (email.IsNullOrEmpty())
-                {
-                    return StatusCode(403, "Usuario no encontrado");
-                }
+                
+                Response<TransactionDTO> response = _transactionService.PostTransaction(email, newTransferDTO);
 
-                Client client = _clientService.GetByEmail(email);
-                if (client == null)
-                {
-                    return StatusCode(403, "Usuario no encontrado");
-                }
+                if (response.StatusCode != 201)
+                    return StatusCode(response.StatusCode, response.Message);
 
-                // Condiciones de la transferencia
-
-                if (String.IsNullOrEmpty(newTransferDTO.FromAccountNumber) || 
-                    String.IsNullOrEmpty(newTransferDTO.ToAccountNumber) ||
-                    String.IsNullOrEmpty(newTransferDTO.Description) ||
-                    newTransferDTO.Amount <= 0)
-                    return StatusCode(403, "Faltan datos");
-
-                if (!client.Accounts.Any(a => a.Number.ToUpper() == newTransferDTO.FromAccountNumber.ToUpper()))
-                {
-                    return StatusCode(403, "La cuenta origen no existe");
-                }
-
-                if (newTransferDTO.FromAccountNumber == newTransferDTO.ToAccountNumber)
-                {
-                    return StatusCode(403, "Cuenta origen y destino iguales");
-                }
-
-                var originAccount = _accountService.GetAccountByNumber(newTransferDTO.FromAccountNumber);
-                if (originAccount.Balance < newTransferDTO.Amount)
-                {
-                    return StatusCode(403, "No hay suficiente saldo para hacer la transferencia");
-                }
-
-                var destinAccount = _accountService.GetAccountByNumber(newTransferDTO.ToAccountNumber);
-                if (destinAccount == null)
-                {
-                    return StatusCode(403, "La cuenta destino no existe");
-                }
-
-                Transaction originTransaction = new Transaction
-                {
-                    AccountId = originAccount.Id,
-                    Type = TransactionType.DEBIT.ToString(),
-                    Amount = - newTransferDTO.Amount,
-                    Description = newTransferDTO.Description + " - " + destinAccount.Number,
-                    Date = DateTime.Now,
-                };
-
-                Transaction destinTransaction = new Transaction
-                {
-                    AccountId = destinAccount.Id,
-                    Type = TransactionType.CREDIT.ToString(),
-                    Amount = newTransferDTO.Amount,
-                    Description = newTransferDTO.Description + " - " + originAccount.Number,
-                    Date = DateTime.Now,
-                };
-
-                originAccount.Balance = originAccount.Balance - newTransferDTO.Amount;
-                destinAccount.Balance = destinAccount.Balance + newTransferDTO.Amount;
-
-                _transactionService.SaveTransaction(originTransaction);
-                _transactionService.SaveTransaction(destinTransaction);
-                _accountService.SaveAccount(originAccount);
-                _accountService.SaveAccount(destinAccount);
-                return Created();
+                return StatusCode(response.StatusCode, response.Data);
 
             }
             catch (Exception e) 

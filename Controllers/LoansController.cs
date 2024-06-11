@@ -21,15 +21,13 @@ namespace HomeBankingMindHub.Controllers
         private readonly IClientService _clientService;
         private readonly IAccountService _accountService;
         private readonly ITransactionService _transactionService;
-        private readonly IClientLoanService _clientLoanService;
         private readonly ILoanService _loanService;
 
-        public LoansController(IClientService clientService, IAccountService accountService, ITransactionService transactionService, IClientLoanService clientLoanService, ILoanService loanService)
+        public LoansController(IClientService clientService, IAccountService accountService, ITransactionService transactionService, ILoanService loanService)
         {
             _clientService = clientService;
             _accountService = accountService;
             _transactionService = transactionService;
-            _clientLoanService = clientLoanService;
             _loanService = loanService;
         }
 
@@ -41,21 +39,14 @@ namespace HomeBankingMindHub.Controllers
             try
             {
                 string email = User.FindFirst("Client") != null ? User.FindFirst("Client").Value : string.Empty;
-                if (email.IsNullOrEmpty())
-                {
-                    return StatusCode(403, "Usuario no encontrado");
-                }
+                
+                Response<IEnumerable<LoanDTO>> response = _loanService.GetLoans(email);
 
-                Client client = _clientService.GetByEmail(email);
+                if (response.StatusCode != 200)
+                    return StatusCode(response.StatusCode, response.Message);
 
-                if (client == null)
-                {
-                    return StatusCode(403, "Usuario no encontrado");
-                }
+                return StatusCode(response.StatusCode, response.Data);
 
-                var loans = _loanService.GetLoans();
-                var loansDTO = loans.Select(l => new LoanDTO(l)).ToList();
-                return Ok(loansDTO);
             }
             catch (Exception e)
             {
@@ -63,80 +54,22 @@ namespace HomeBankingMindHub.Controllers
             }
         }
 
+
         [HttpPost]
         [Authorize(Policy = "ClientOnly")]
 
-        public IActionResult postLoans(LoanApplicationDTO loanApplicationDTO)
+        public IActionResult PostLoans(LoanApplicationDTO loanApplicationDTO)
         {
             try
             {
                 string email = User.FindFirst("Client") != null ? User.FindFirst("Client").Value : string.Empty;
-                if (email.IsNullOrEmpty())
-                {
-                    return StatusCode(403, "Usuario no encontrado");
-                }
+                Response<ClientLoanDTO> response = _loanService.PostClientLoan(email, loanApplicationDTO);
 
-                Client client = _clientService.GetByEmail(email);
+                if (response.StatusCode != 201)
+                    return StatusCode(response.StatusCode, response.Message);
 
-                if (client == null)
-                {
-                    return StatusCode(403, "Usuario no encontrado");
-                }
+                return StatusCode(response.StatusCode, response.Message);
 
-                if (String.IsNullOrEmpty(loanApplicationDTO.ToAccountNumber) ||
-                    String.IsNullOrEmpty(loanApplicationDTO.Payments) ||
-                    loanApplicationDTO.Amount <= 0)
-                {
-                    return StatusCode(403, "Faltan datos");
-                }
-
-                var loan = _loanService.GetLoanById(loanApplicationDTO.LoanId);
-                if (loan == null)
-                {
-                    return StatusCode(403, "Prestamo no encontrado");
-                }
-
-                if (loanApplicationDTO.Amount > loan.MaxAmount)
-                {
-                    return StatusCode(403, "Monto invalido");
-                }
-
-                var allowedPayments = loan.Payments.Split(',').Select(int.Parse).ToList();
-                if (!allowedPayments.Contains(Convert.ToInt32(loanApplicationDTO.Payments)))
-                {
-                    return StatusCode(403, "Numero de pagos invalidos");
-                }
-
-                var clientAccounts = _accountService.AccountsByClient(client.Id);
-                if (!clientAccounts.Any(account => account.Number == loanApplicationDTO.ToAccountNumber))
-                {
-                    return StatusCode(403, "Cuenta incorrecta");
-                }
-
-                ClientLoan clientLoan = new ClientLoan
-                {
-                    Amount = loanApplicationDTO.Amount + 0.2 * loanApplicationDTO.Amount,
-                    Payments = loanApplicationDTO.Payments,
-                    ClientId = client.Id,
-                    LoanId = loanApplicationDTO.LoanId,
-                };
-                _clientLoanService.SaveClientLoan(clientLoan);
-
-                var account = _accountService.GetAccountByNumber(loanApplicationDTO.ToAccountNumber);
-
-                Transaction transaction = new Transaction
-                {
-                    AccountId = account.Id,
-                    Type = TransactionType.CREDIT.ToString(),
-                    Amount = loanApplicationDTO.Amount + 0.2 * loanApplicationDTO.Amount,
-                    Description = loan.Name + " - Loan approved",
-                    Date = DateTime.Now,
-                };
-                _transactionService.SaveTransaction(transaction);
-
-                account.Balance += loanApplicationDTO.Amount + 0.2 * loanApplicationDTO.Amount;
-                _accountService.SaveAccount(account);
-                return Created();
             }
             catch (Exception e)
             {

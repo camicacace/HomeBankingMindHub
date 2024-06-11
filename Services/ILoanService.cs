@@ -1,10 +1,12 @@
-﻿using HomeBankingMindHub.Models;
+﻿using HomeBankingMindHub.DTOs;
+using HomeBankingMindHub.Models;
 
 namespace HomeBankingMindHub.Services
 {
     public interface ILoanService
     {
-        public IEnumerable<Loan> GetLoans();
-        public Loan GetLoanById(long id);
+        public Response<IEnumerable<LoanDTO>> GetLoans(string email);
+        public Response<ClientLoanDTO> PostClientLoan(string email, LoanApplicationDTO loanApplicationDTO);
+
     }
 }

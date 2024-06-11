@@ -3,6 +3,7 @@ using HomeBankingMindHub.DTOs;
 using HomeBankingMindHub.Models;
 using HomeBankingMindHub.Repositories;
 using HomeBankingMindHub.Repositories.Implementations;
+using System.Net.Sockets;
 using System.Security.Cryptography;
 
 namespace HomeBankingMindHub.Servicies.Implementations
@@ -15,64 +16,45 @@ namespace HomeBankingMindHub.Servicies.Implementations
             _accountRepository = accountRepository;
         }
 
-        public AccountDTO CreateAccountDTO(Account account)
+        public Response<AccountDTO> AccountById(long id)
         {
-            return new AccountDTO(account);
-        }
+            var account = _accountRepository.FindById(id);
+            var response = new Response<AccountDTO>();
 
-
-        public IEnumerable<AccountDTO> CreateAccountsDTO(IEnumerable<Account> accounts)
-        {
-            return accounts.Select(a => new AccountDTO(a));
-        }
-
-        public Account AccountById(long id)
-        {
-            return _accountRepository.FindById(id);
-        }
-
-        public IEnumerable<Account> GetAccounts()
-        {
-            return _accountRepository.GetAllAccounts();
-        }
-
-        public IEnumerable<Account> AccountsByClient(long idClient)
-        {
-            return _accountRepository.GetAccountsByClient(idClient).ToList();
-        }
-
-        public Account GetAccountByNumber(string accountNumber)
-        {
-            return _accountRepository.FindByNumber(accountNumber);
-        }
-
-        public string GenerateAccountNumber()
-        {
-            Random random = new Random();
-            int randomInt = random.Next(0, 100000000);
-            // Para que tenga 8 digitos y pueda incluir 00000000
-            string randomEightDigitNumber = randomInt.ToString("D8");
-            return "VIN" + randomEightDigitNumber;
-        }
-
-        public string UniqueAccountNumber()
-        {
-            IEnumerable<Account> accounts = _accountRepository.GetAllAccounts();
-            string randomNumber;
-
-            do
+            if (account == null)
             {
-                randomNumber = GenerateAccountNumber();
+                response.StatusCode = 404;
+                response.Message = $"Account with ID {id} not found.";
+            } else
+            {
+                var accountDTO = new AccountDTO(account);
+                response.StatusCode = 200;
+                response.Data = accountDTO;
+            }
 
-            } while (accounts.Any(acc => acc.Number == randomNumber));
-
-            return randomNumber;
-
+            return response;
         }
 
-        public void SaveAccount(Account account)
+        public Response<IEnumerable<AccountDTO>> GetAccounts()
         {
-            _accountRepository.Save(account);
+            
+            var accounts = _accountRepository.GetAllAccounts();
+            var response = new Response<IEnumerable<AccountDTO>>();
+
+            if (accounts == null)
+            {
+                response.StatusCode = 400;
+                response.Message = "No se encontraron cuentas";
+            } else
+            {
+                var accountsDTO = accounts.Select(a => new AccountDTO(a));
+                response.StatusCode = 200;
+                response.Message = "Ok";
+                response.Data = accountsDTO;
+            }
+
+            return response;
         }
+
     }
 }

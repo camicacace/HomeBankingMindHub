@@ -1,18 +1,14 @@
 ﻿using HomeBankingMindHub.DTOs;
 using HomeBankingMindHub.Models;
+using Microsoft.EntityFrameworkCore.Update.Internal;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace HomeBankingMindHub.Servicies
 {
     public interface IAccountService
     {
-        public string GenerateAccountNumber();
-        public string UniqueAccountNumber();
-        public AccountDTO CreateAccountDTO(Account account);
-        public IEnumerable<AccountDTO> CreateAccountsDTO(IEnumerable<Account> accounts);
-        public Account AccountById(long id);
-        public IEnumerable<Account> GetAccounts();
-        public IEnumerable<Account> AccountsByClient(long idClient);
-        public Account GetAccountByNumber(string accountNumber);
-        public void SaveAccount(Account account);
+        public Response<AccountDTO> AccountById(long id);
+        public Response<IEnumerable<AccountDTO>> GetAccounts();
+
     }
 }

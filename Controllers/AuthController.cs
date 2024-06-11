@@ -7,6 +7,7 @@ using HomeBankingMindHub.Services.Implementations;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
@@ -16,11 +17,13 @@ namespace HomeBankingMindHub.Controllers
     [ApiController]
     public class AuthController : ControllerBase
     {
-        private IClientService _clientService;
+        private readonly IClientRepository _clientRepository;
+        private readonly PasswordHasher<Client> _passwordHasher;
 
-        public AuthController( IClientService clientService)
+        public AuthController( IClientRepository clientRepository)
         {
-            _clientService = clientService;
+            _clientRepository = clientRepository;
+            _passwordHasher = new PasswordHasher<Client>();
         }
 
         [HttpPost("login")]
@@ -29,8 +32,15 @@ namespace HomeBankingMindHub.Controllers
         {
             try
             {
-                Client user = _clientService.GetByEmail(loginDTO.Email);
-                if (user == null || !String.Equals(user.Password,loginDTO.Password))
+                Client user = _clientRepository.FindByEmail(loginDTO.Email);
+                if (user == null)
+                {
+                    return StatusCode(403, "Invalid user information");
+                }
+
+                // hasheo la password ingresada para comparar con la almacenada
+                var result = _passwordHasher.VerifyHashedPassword(user, user.Password, loginDTO.Password);
+                if (result != PasswordVerificationResult.Success)
                 {
                     return StatusCode(403, "Invalid user information");
                 }
