@@ -33,7 +33,6 @@ namespace HomeBankingMindHub.Controllers
 
         [HttpGet]
         [Authorize(Policy = "ClientOnly")]
-
         public IActionResult GetLoans()
         {
             try
@@ -57,7 +56,6 @@ namespace HomeBankingMindHub.Controllers
 
         [HttpPost]
         [Authorize(Policy = "ClientOnly")]
-
         public IActionResult PostLoans(LoanApplicationDTO loanApplicationDTO)
         {
             try

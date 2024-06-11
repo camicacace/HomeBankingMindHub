@@ -75,71 +75,73 @@ namespace HomeBankingMindHub.Services.Implementations
                 }
                 else { 
 
-                var loan = _loanRepository.FindById(loanApplicationDTO.LoanId);
-                if (loan == null)
-                {
-                    response.StatusCode = 403;
-                    response.Message = "Loan does not exist";
-                }
-
-                if (loanApplicationDTO.Amount > loan.MaxAmount || loanApplicationDTO.Amount <= 0)
-                {
-                    response.StatusCode = 403;
-                    response.Message = "Excedes max amount";
-                } else { 
-
-                var allowedPayments = loan.Payments.Split(',').Select(int.Parse).ToList();
-                    if (!allowedPayments.Contains(Convert.ToInt32(loanApplicationDTO.Payments)))
+                    var loan = _loanRepository.FindById(loanApplicationDTO.LoanId);
+                    if (loan == null)
                     {
                         response.StatusCode = 403;
-                        response.Message = "Invalid amount of payments";
+                        response.Message = "Loan does not exist";
                     }
-                    else
-                    {
-                        var clientAccounts = _accountRepository.GetAccountsByClient(client.Id).ToList();
-                            if (clientAccounts == null)
+                    else { 
+
+                        if (loanApplicationDTO.Amount > loan.MaxAmount || loanApplicationDTO.Amount <= 0)
+                        {
+                            response.StatusCode = 403;
+                            response.Message = "Excedes max amount";
+                        } else { 
+
+                            var allowedPayments = loan.Payments.Split(',').Select(int.Parse).ToList();
+                            if (!allowedPayments.Contains(Convert.ToInt32(loanApplicationDTO.Payments)))
                             {
-                                response.StatusCode = 400;
-                                response.Message = "No accounts";
+                                response.StatusCode = 403;
+                                response.Message = "Invalid amount of payments";
                             }
                             else
                             {
-
-                                if (!clientAccounts.Any(account => account.Number == loanApplicationDTO.ToAccountNumber))
+                                var clientAccounts = _accountRepository.GetAccountsByClient(client.Id).ToList();
+                                if (clientAccounts == null)
                                 {
                                     response.StatusCode = 400;
-                                    response.Message = "Incorrect account";
+                                    response.Message = "No accounts";
                                 }
                                 else
                                 {
 
-                                    ClientLoan clientLoan = new ClientLoan
+                                    if (!clientAccounts.Any(account => account.Number == loanApplicationDTO.ToAccountNumber))
                                     {
-                                        Amount = loanApplicationDTO.Amount + 0.2 * loanApplicationDTO.Amount,
-                                        Payments = loanApplicationDTO.Payments,
-                                        ClientId = client.Id,
-                                        LoanId = loanApplicationDTO.LoanId,
-                                    };
-
-                                    _clientLoanRepository.Save(clientLoan);
-
-                                    var account = _accountRepository.FindByNumber(loanApplicationDTO.ToAccountNumber);
-
-                                    Transaction transaction = new Transaction
+                                        response.StatusCode = 400;
+                                        response.Message = "Incorrect account";
+                                    }
+                                    else
                                     {
-                                        AccountId = account.Id,
-                                        Type = TransactionType.CREDIT.ToString(),
-                                        Amount = loanApplicationDTO.Amount + 0.2 * loanApplicationDTO.Amount,
-                                        Description = loan.Name + " - Loan approved",
-                                        Date = DateTime.Now,
-                                    };
-                                    _transactionRepository.Save(transaction);
 
-                                    account.Balance += loanApplicationDTO.Amount + 0.2 * loanApplicationDTO.Amount;
-                                    _accountRepository.Save(account);
+                                        ClientLoan clientLoan = new ClientLoan
+                                        {
+                                            Amount = loanApplicationDTO.Amount + 0.2 * loanApplicationDTO.Amount,
+                                            Payments = loanApplicationDTO.Payments,
+                                            ClientId = client.Id,
+                                            LoanId = loanApplicationDTO.LoanId,
+                                        };
 
-                                    response.StatusCode = 201;
-                                    response.Message = "Loan created";
+                                        _clientLoanRepository.Save(clientLoan);
+
+                                        var account = _accountRepository.FindByNumber(loanApplicationDTO.ToAccountNumber);
+
+                                        Transaction transaction = new Transaction
+                                        {
+                                            AccountId = account.Id,
+                                            Type = TransactionType.CREDIT.ToString(),
+                                            Amount = loanApplicationDTO.Amount + 0.2 * loanApplicationDTO.Amount,
+                                            Description = loan.Name + " - Loan approved",
+                                            Date = DateTime.Now,
+                                        };
+                                        _transactionRepository.Save(transaction);
+
+                                        account.Balance += loanApplicationDTO.Amount + 0.2 * loanApplicationDTO.Amount;
+                                        _accountRepository.Save(account);
+
+                                        response.StatusCode = 201;
+                                        response.Message = "Loan created";
+                                    }
                                 }
                             }
                         }

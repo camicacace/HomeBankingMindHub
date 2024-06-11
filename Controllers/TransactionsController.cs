@@ -71,7 +71,7 @@ namespace HomeBankingMindHub.Controllers
         [HttpPost]
         [Authorize(Policy = "ClientOnly")]
 
-        public IActionResult postTransaction([FromBody] TransferDTO newTransferDTO)
+        public IActionResult PostTransaction([FromBody] TransferDTO newTransferDTO)
         {
             try
             {

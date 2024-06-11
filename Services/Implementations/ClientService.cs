@@ -234,6 +234,10 @@ namespace HomeBankingMindHub.Services.Implementations
                 }
                 else
                 {
+
+                    newCardDTO.Color = newCardDTO.Color.ToUpper();
+                    newCardDTO.Type = newCardDTO.Type.ToUpper();
+
                     if (_cardRepository.GetCardsByType(client.Id, newCardDTO.Type).Count() >= 3)
                     {
                         response.StatusCode = 403;

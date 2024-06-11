@@ -75,7 +75,6 @@ namespace HomeBankingMindHub.Controllers
 
         [HttpGet("current")]
         [Authorize(Policy = "ClientOnly")]
-
         public IActionResult getCurrent()
         {
             try
@@ -120,7 +119,6 @@ namespace HomeBankingMindHub.Controllers
         }
 
         [HttpPost]
-
         public IActionResult Post([FromBody] NewClientDTO newClientDTO)
         {
             try
@@ -142,7 +140,6 @@ namespace HomeBankingMindHub.Controllers
 
         [HttpPost("current/accounts")]
         [Authorize (Policy = "ClientOnly")]
-
         public IActionResult PostAccount()
         {
 
@@ -167,7 +164,6 @@ namespace HomeBankingMindHub.Controllers
 
         [HttpPost("current/cards")]
         [Authorize(Policy = "ClientOnly")]
-
         public IActionResult PostCard([FromBody] NewCardDTO newCardDTO)
         {
             try

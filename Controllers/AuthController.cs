@@ -17,13 +17,11 @@ namespace HomeBankingMindHub.Controllers
     [ApiController]
     public class AuthController : ControllerBase
     {
-        private readonly IClientRepository _clientRepository;
-        private readonly PasswordHasher<Client> _passwordHasher;
+        private readonly IAuthService _authService;
 
-        public AuthController( IClientRepository clientRepository)
+        public AuthController(IAuthService authService)
         {
-            _clientRepository = clientRepository;
-            _passwordHasher = new PasswordHasher<Client>();
+            _authService = authService;
         }
 
         [HttpPost("login")]
@@ -32,40 +30,16 @@ namespace HomeBankingMindHub.Controllers
         {
             try
             {
-                Client user = _clientRepository.FindByEmail(loginDTO.Email);
-                if (user == null)
-                {
-                    return StatusCode(403, "Invalid user information");
-                }
+                Response<ClaimsIdentity> response = _authService.Login(loginDTO);
 
-                // hasheo la password ingresada para comparar con la almacenada
-                var result = _passwordHasher.VerifyHashedPassword(user, user.Password, loginDTO.Password);
-                if (result != PasswordVerificationResult.Success)
-                {
-                    return StatusCode(403, "Invalid user information");
-                }
-
-                var claims = new List<Claim>
-                {   
-                    new Claim("Client", user.Email)
-                };
-
-                if (user.Email.ToLower() == "cc@gmail.com")
-                {
-                    claims.Add(new Claim("Admin", user.Email));
-                }
-
-
-                var claimsIdentity = new ClaimsIdentity(
-                    claims,
-                    CookieAuthenticationDefaults.AuthenticationScheme
-                    );
+                if (response.StatusCode != 200)
+                    return StatusCode(response.StatusCode, response.Message);
 
                 await HttpContext.SignInAsync(
                     CookieAuthenticationDefaults.AuthenticationScheme, 
-                    new ClaimsPrincipal(claimsIdentity));
+                    new ClaimsPrincipal(response.Data));
 
-                return Ok();
+                return StatusCode(response.StatusCode, response.Message);
 
             }
             catch (Exception e)
