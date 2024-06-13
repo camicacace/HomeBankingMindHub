@@ -54,7 +54,7 @@ namespace HomeBankingMindHub.Controllers
         }
 
         [HttpGet("{id}")]
-        [Authorize (Policy = "ClientOnly")]
+        [Authorize (Policy = "AdminOnly")]
         public IActionResult GetClientById(long id)
         {
             try {
@@ -75,7 +75,7 @@ namespace HomeBankingMindHub.Controllers
 
         [HttpGet("current")]
         [Authorize(Policy = "ClientOnly")]
-        public IActionResult getCurrent()
+        public IActionResult GetCurrent()
         {
             try
             {
@@ -98,7 +98,7 @@ namespace HomeBankingMindHub.Controllers
 
         [HttpGet("current/accounts")]
         [Authorize(Policy = "ClientOnly")]
-        public IActionResult getCurrentAccounts()
+        public IActionResult GetCurrentAccounts()
         {
             try
             {

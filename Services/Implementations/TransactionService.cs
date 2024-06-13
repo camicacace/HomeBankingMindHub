@@ -23,140 +23,142 @@ namespace HomeBankingMindHub.Services.Implementations
 
         public Response<TransactionDTO> GetById(long id)
         {
-            Response<TransactionDTO> response = new Response<TransactionDTO>();
             Transaction transaction= _transactionRepository.FindById(id);
 
             if (transaction == null)
             {
-                response.StatusCode = 403;
-                response.Message = $"Transaction with id {id} does not exist";
+                return new Response<TransactionDTO>
+                {
+                    StatusCode = 403,
+                    Message = $"Transaction with id {id} does not exist"
+                };
             }
-            else
-            {
-                var transactionDTO = new TransactionDTO(transaction);
-                response.StatusCode = 200;
-                response.Data = transactionDTO;
-            }
+            
+            var transactionDTO = new TransactionDTO(transaction);
 
-            return response;
+            return new Response<TransactionDTO>
+            {
+                StatusCode = 200,
+                Data = transactionDTO
+            };
         }
 
         public Response<IEnumerable<TransactionDTO>> GetTransactions()
         {
-            Response<IEnumerable<TransactionDTO>> response = new Response<IEnumerable<TransactionDTO>>();
             var transactions = _transactionRepository.GetAllTransactions();
 
             if (transactions == null){
-                response.StatusCode = 403;
-                response.Message = "No transactions";
-            }
-            else
-            {
-                var transactionsDTO = transactions.Select(t => new TransactionDTO(t));
-                response.StatusCode = 200;
-                response.Data = transactionsDTO;
+
+                return new Response<IEnumerable<TransactionDTO>>
+                {
+                    StatusCode = 403,
+                    Message = "No transactions"
+                };
             }
 
-            return response;
+            var transactionsDTO = transactions.Select(t => new TransactionDTO(t));
+
+            return new Response<IEnumerable<TransactionDTO>>
+            {
+                StatusCode = 200,
+                Data = transactionsDTO
+            };
+
         }
 
         public Response<TransactionDTO> PostTransaction(string email, TransferDTO newTransferDTO)
         {
-            Response<TransactionDTO> response = new Response<TransactionDTO>();
             Client client = _clientRepository.FindByEmail(email);
 
             if (client == null)
             {
-                response.StatusCode = 403;
-                response.Message = "Email in use";
+                return new Response<TransactionDTO>
+                {
+                    StatusCode = 400,
+                    Message = "User not found"
+                };
+
             }
-            else
-            {
-                if (newTransferDTO.FromAccountNumber.IsNullOrEmpty() ||
+
+            if (newTransferDTO.FromAccountNumber.IsNullOrEmpty() ||
                     newTransferDTO.ToAccountNumber.IsNullOrEmpty() ||
                     newTransferDTO.Description.IsNullOrEmpty() ||
                     newTransferDTO.Amount <= 0)
+            {
+                return new Response<TransactionDTO>
                 {
-                    response.StatusCode = 403;
-                    response.Message = "Missing fields";
-                }
-                else
+                    StatusCode = 403,
+                    Message = "Missing fields"
+                };
+
+            }
+            if (newTransferDTO.FromAccountNumber == newTransferDTO.ToAccountNumber)
+            {
+                return new Response<TransactionDTO>
                 {
-
-
-                    if (!client.Accounts.Any(a => a.Number.ToUpper() == newTransferDTO.FromAccountNumber.ToUpper()))
-                    {
-                        response.StatusCode = 403;
-                        response.Message = "Origin account does not exist";
-                    }
-                    else
-                    {
-
-                        if (newTransferDTO.FromAccountNumber == newTransferDTO.ToAccountNumber)
-                        {
-                            response.StatusCode = 403;
-                            response.Message = "Origin and Destin account are the same";
-                        }
-                        else
-                        {
-
-                            var originAccount = _accountRepository.FindByNumber(newTransferDTO.FromAccountNumber);
-                            if (originAccount.Balance < newTransferDTO.Amount)
-                            {
-                                response.StatusCode = 403;
-                                response.Message = "Balance lower than amount";
-                            }
-                            else
-                            {
-
-                                var destinAccount = _accountRepository.FindByNumber(newTransferDTO.ToAccountNumber);
-                                if (destinAccount == null)
-                                {
-                                    response.StatusCode = 403;
-                                    response.Message = "Destin account does not exist";
-                                }
-                                else
-                                {
-
-                                    Transaction originTransaction = new Transaction
-                                    {
-                                        AccountId = originAccount.Id,
-                                        Type = TransactionType.DEBIT.ToString(),
-                                        Amount = -newTransferDTO.Amount,
-                                        Description = newTransferDTO.Description + " - " + destinAccount.Number,
-                                        Date = DateTime.Now,
-                                    };
-
-                                    Transaction destinTransaction = new Transaction
-                                    {
-                                        AccountId = destinAccount.Id,
-                                        Type = TransactionType.CREDIT.ToString(),
-                                        Amount = newTransferDTO.Amount,
-                                        Description = newTransferDTO.Description + " - " + originAccount.Number,
-                                        Date = DateTime.Now,
-                                    };
-
-
-                                    originAccount.Balance = originAccount.Balance - newTransferDTO.Amount;
-                                    destinAccount.Balance = destinAccount.Balance + newTransferDTO.Amount;
-
-                                    _transactionRepository.Save(originTransaction);
-                                    _transactionRepository.Save(destinTransaction);
-                                    _accountRepository.Save(originAccount);
-                                    _accountRepository.Save(destinAccount);
-
-                                    var transactionDTO = new TransactionDTO(originTransaction);
-                                    response.StatusCode = 201;
-                                    response.Message = "Transaction created";
-                                    response.Data = transactionDTO;
-                                }
-                            }
-                        }
-                    }
-                }
+                    StatusCode = 403,
+                    Message = "Origin and Destin account are the same"
+                };
             }
 
-            return response;
+            var originAccount = _accountRepository.FindByNumber(newTransferDTO.FromAccountNumber);
+            if (originAccount.Balance < newTransferDTO.Amount)
+            {
+                return new Response<TransactionDTO>
+                {
+                    StatusCode = 403,
+                    Message = "Balance lower than amount"
+                };
+            }
+
+            var destinAccount = _accountRepository.FindByNumber(newTransferDTO.ToAccountNumber);
+            if (destinAccount == null)
+            {
+                return new Response<TransactionDTO>
+                {
+                    StatusCode = 403,
+                    Message = "Destin account does not exist"
+                };
+            }
+
+            Transaction originTransaction = new Transaction
+            {
+                AccountId = originAccount.Id,
+                Type = TransactionType.DEBIT.ToString(),
+                Amount = -newTransferDTO.Amount,
+                Description = newTransferDTO.Description + " - " + destinAccount.Number,
+                Date = DateTime.Now,
+            };
+
+            Transaction destinTransaction = new Transaction
+            {
+                AccountId = destinAccount.Id,
+                Type = TransactionType.CREDIT.ToString(),
+                Amount = newTransferDTO.Amount,
+                Description = newTransferDTO.Description + " - " + originAccount.Number,
+                Date = DateTime.Now,
+            };
+
+
+            originAccount.Balance = originAccount.Balance - newTransferDTO.Amount;
+            destinAccount.Balance = destinAccount.Balance + newTransferDTO.Amount;
+
+            _transactionRepository.Save(originTransaction);
+            _transactionRepository.Save(destinTransaction);
+            _accountRepository.Save(originAccount);
+            _accountRepository.Save(destinAccount);
+
+            var transactionDTO = new TransactionDTO(originTransaction);
+
+
+
+            return new Response<TransactionDTO>
+            {
+                StatusCode = 201,
+                Message = "Transaction created",
+                Data = transactionDTO
+            };
+
         }
 
     }

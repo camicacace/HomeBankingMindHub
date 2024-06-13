@@ -2,6 +2,7 @@
 using HomeBankingMindHub.Models;
 using HomeBankingMindHub.Repositories;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using System.Security.Claims;
 
@@ -21,54 +22,60 @@ namespace HomeBankingMindHub.Services.Implementations
         public Response<ClaimsIdentity> Login(LoginDTO loginDTO)
         {
 
-            var response = new Response<ClaimsIdentity>();
 
             if (String.IsNullOrEmpty(loginDTO.Email) || String.IsNullOrEmpty(loginDTO.Password))
             {
-                response.StatusCode = 403;
-                response.Message = "Missing fields";
-            } else { 
 
-                Client user = _clientRepository.FindByEmail(loginDTO.Email);
-                if (user == null)
+                return new Response<ClaimsIdentity>
                 {
-                    response.StatusCode = 403;
-                    response.Message = "Invalid user information";
-                }
-                else
+                    StatusCode = 403,
+                    Message = "Missing fields"
+                };
+                
+            }
+
+            Client user = _clientRepository.FindByEmail(loginDTO.Email);
+            if (user == null)
+            {
+                return new Response<ClaimsIdentity>
                 {
+                    StatusCode = 403,
+                    Message = "Invalid user information"
+                };
+            }
+
                     // hasheo la password ingresada para comparar con la almacenada
-                    var result = _passwordHasher.VerifyHashedPassword(user, user.Password, loginDTO.Password);
-                    if (result != PasswordVerificationResult.Success)
-                    {
-                        response.StatusCode = 403;
-                        response.Message = "Invalid user information";
-                    }
-                    else
-                    {
-                        var claims = new List<Claim>
+            var result = _passwordHasher.VerifyHashedPassword(user, user.Password, loginDTO.Password);
+            if (result != PasswordVerificationResult.Success)
+            {
+                return new Response<ClaimsIdentity>
+                {
+                    StatusCode = 403,
+                    Message = "Invalid user information"
+                };
+            }
+            var claims = new List<Claim>
                         {
                             new Claim("Client", user.Email)
                         };
 
-                        if (user.Email.ToLower() == "cc@gmail.com")
-                        {
-                            claims.Add(new Claim("Admin", user.Email));
-                        }
-
-                        var claimsIdentity = new ClaimsIdentity(
-                        claims,
-                        CookieAuthenticationDefaults.AuthenticationScheme
-                        );
-
-                        response.StatusCode = 200;
-                        response.Data = claimsIdentity;
-                        response.Message = "Autentication complete";
-
-                    }
-                }
+            if (user.Email.ToLower() == "ps@gmail.com")
+            {
+                claims.Add(new Claim("Admin", user.Email));
             }
-            return response;
+
+            var claimsIdentity = new ClaimsIdentity(
+            claims,
+            CookieAuthenticationDefaults.AuthenticationScheme
+            );
+
+            return new Response<ClaimsIdentity>
+            {
+                StatusCode = 200,
+                Data = claimsIdentity,
+                Message = "Autentication complete"
+
+            };
         }
     }
 }
