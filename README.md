@@ -3,7 +3,7 @@
 ## Descripción del Proyecto
 HomeBanking es una aplicación de banca en línea diseñada para ofrecer una forma sencilla y segura  de gestionar las finanzas personales. Los usuarios pueden controlar sus cuentas bancarias, tarjetas de crédito y débito, realizar transacciones y solicitar préstamos de manera rápida y sencilla. 
 
-## Tecnologías Utilizadas
+## ✅Tecnologías Utilizadas
    - ASP.NET Core: El marco principal para construir la API web.
    - Entity Framework Core: Un ORM (Object-Relational Mapper) que facilita la interacción con la base de datos, permitiendo un acceso y manejo de datos más intuitivo y eficiente.
    - Microsoft SQL Server: La base de datos relacional utilizada para almacenar toda la información del sistema.
