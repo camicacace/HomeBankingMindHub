@@ -1,7 +1,7 @@
 # HomeBankingMindHub
 
 ## Descripción del Proyecto
-HomeBanking es una aplicación de banca en línea diseñada para ofrecer una forma sencilla y segura  de gestionar las finanzas personales. Los usuarios pueden controlar sus cuentas bancarias, tarjetas de crédito y débito, realizar transacciones y solicitar préstamos de manera rápida y sencilla. 
+HomeBanking es una aplicación de banco en línea diseñada para ofrecer una forma sencilla y segura de gestionar las finanzas personales. Los usuarios pueden controlar sus cuentas bancarias, tarjetas de crédito y débito, realizar transacciones y solicitar préstamos de manera rápida y sencilla. 
 
 ## ✅Tecnologías Utilizadas
   - **ASP.NET Core**: El marco principal para construir la API web.
