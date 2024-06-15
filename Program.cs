@@ -1,4 +1,11 @@
 using HomeBankingMindHub.Models;
+using HomeBankingMindHub.Repositories;
+using HomeBankingMindHub.Repositories.Implementations;
+using HomeBankingMindHub.Services;
+using HomeBankingMindHub.Services.Implementations;
+using HomeBankingMindHub.Servicies;
+using HomeBankingMindHub.Servicies.Implementations;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -6,8 +13,44 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddRazorPages();
 
+// Extra
+builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
 builder.Services.AddDbContext<HomeBankingContext>(
     options => options.UseSqlServer(builder.Configuration.GetConnectionString("HomeBankingConnection")));
+
+// Servicies
+builder.Services.AddScoped<IClientService, ClientService>();
+builder.Services.AddScoped<IAccountService,AccountService>();
+builder.Services.AddScoped<ITransactionService, TransactionService>();
+builder.Services.AddScoped<ILoanService, LoanService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
+
+// Repositories
+builder.Services.AddScoped<IClientRepository, ClientRepository>();
+builder.Services.AddScoped<IAccountRepository, AccountRepository>();
+builder.Services.AddScoped<ITransactionRepository, TransactionRepository>();
+builder.Services.AddScoped<ICardRepository, CardRepository>();
+builder.Services.AddScoped<ILoanRepository, LoanRepository>();
+builder.Services.AddScoped<IClientLoanRepository, ClientLoanRepository>();
+
+// Add authentication to the container
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+      .AddCookie(options =>
+      {
+          options.ExpireTimeSpan = TimeSpan.FromMinutes(10);
+          options.LoginPath = new PathString("/index.html");
+      });
+
+// Add authorization to the container
+builder.Services.AddAuthorization(
+    options =>
+{
+    options.AddPolicy("ClientOnly", policy => policy.RequireClaim("Client"));
+    options.AddPolicy("AdminOnly", policy => policy.RequireClaim("Admin"));
+});
 
 var app = builder.Build();
 
@@ -32,10 +75,22 @@ using (var scope = app.Services.CreateScope())
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error");
+} else
+{
+    
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
+
 app.UseStaticFiles();
 
 app.UseRouting();
+
+// For authentication
+app.UseAuthentication();
+app.UseAuthorization();
+
+app.MapControllers();
 
 app.UseAuthorization();
 
