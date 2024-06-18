@@ -19,3 +19,6 @@ HomeBanking es una aplicación de banco en línea diseñada para ofrecer una for
 - `Transacciones`: Facilita la realización de transacciones financieras tanto a cuentas propias como a cuentas de terceros.
 - `Solicitud de Préstamos`: Permite a los usuarios solicitar préstamos de manera rápida y sencilla.
 - `Documentación Interactiva`: Gracias a Swagger/OpenAPI, los desarrolladores pueden explorar y entender fácilmente los endpoints de la API.
+
+## Notas
+[1]: La rama "extra" contiene una funcionalidad adicional de manejo de tokens para la autenticacion.
