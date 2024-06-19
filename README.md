@@ -3,7 +3,7 @@
 ## Descripción del Proyecto
 HomeBanking es una aplicación de banco en línea diseñada para ofrecer una forma sencilla y segura de gestionar las finanzas personales. Los usuarios pueden controlar sus cuentas bancarias, tarjetas de crédito y débito, realizar transacciones y solicitar préstamos de manera rápida y sencilla.
 
-**Estado del Proyecto:** ![completado](https://img.shields.io/badge/estado-completado-brightgreen) El proyecto ha sido completado y ha alcanzado todos los objetivos propuestos.
+![completado](https://img.shields.io/badge/estado-completado-brightgreen)   El proyecto ha sido completado y ha alcanzado todos los objetivos propuestos.
 
 ## ✅Tecnologías Utilizadas
   - **ASP.NET Core**: El marco principal para construir la API web.
